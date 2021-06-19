@@ -1,0 +1,19 @@
+{
+  "name": "perceptron_project",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "tsc && node dist/main.js",
+    "serve": "tsc-watch --onSuccess \"node ./dist/main.js\""
+  },
+  "devDependencies": {
+    "@types/csv-parse": "^1.2.2",
+    "@types/node": "^15.12.4",
+    "tsc-watch": "^4.4.0",
+    "typescript": "^4.3.2"
+  },
+  "dependencies": {
+    "csv-parse": "^4.16.0"
+  }
+}
