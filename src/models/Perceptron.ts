@@ -1,74 +1,20 @@
 class Perceptron {
-  debug = false;
-
-  weights = [];
+  weights = [0, 0, 1];
 
   threshold = 1;
 
-  learningrate = 0.1;
+  learnTaxe = 0.1;
 
   data = [];
 
-  train(inputs: number[], expected: number) {
-    while (this.weights.length < inputs.length) {
-      this.weights.push(Math.random());
-    }
-
-    // adiona peso pro bias
-    if (this.weights.length == inputs.length) {
-      this.weights.push(1);
-    }
-
-    var result = this.predict(inputs);
-    this.data.push({ input: inputs, target: expected, prev: result });
-
-    // if (this.debug)
-    //   console.log(
-    //     "> training %s, expecting: %s got: %s",
-    //     inputs,
-    //     expected,
-    //     result
-    //   );
-
-    if (result == expected) {
-      return true;
-    } else {
-      // if (this.debug)
-      //   console.log("> adjusting this.weights...", this.weights, inputs);
-      for (var i = 0; i < this.weights.length; i++) {
-        var input = i == inputs.length ? this.threshold : inputs[i];
-        this.adjust(result, expected, input, i);
-      }
-      // if (this.debug) console.log(" -> this.weights:", this.weights);
-      return false;
-    }
-  }
-
-  retrain() {
-    const length = this.data.length;
-    let success = true;
-    for (let i = 0; i < length; i++) {
-      let training = this.data.shift();
-      success = this.train(training.input, training.target) && success;
-    }
-    return success;
-  }
-
-  adjust(result, expected, input, index) {
-    var d = this.delta(result, expected, input, this.learningrate);
-    this.weights[index] += d;
-    if (isNaN(this.weights[index]))
-      throw new Error("this.weights[" + index + "] went to NaN!!");
-  }
-
-  delta(actual: number, expected: number, input: number, learnrate: number) {
-    return (expected - actual) * learnrate * input;
-  }
-
+  /**
+   * Retorna valor da previsão
+   */
   predict(inputs?: number[]) {
-    const bias = this.threshold * this.weights.slice(-1)[0];
+    const biasWeight = this.weights.slice(-1)[0];
+    const bias = this.threshold * biasWeight;
 
-    const result = inputs.reduce((acc, value, i) => {
+    const result = inputs.reduce((acc, _, i) => {
       acc += inputs[i] * this.weights[i];
       return acc;
     }, bias);
@@ -76,23 +22,30 @@ class Perceptron {
     return result > 0 ? 2 : 1;
   }
 
-  trainSet(set: number[][], results: number[], cycles: number) {
+  /**
+   * Treina o algoritmo prediction
+   * @param set Valores para treinar
+   * @param results Resultado dos valores a serem testados
+   * @param cycles Quantidade de ciclos de treinamento
+   */
+  trainSet(set: number[][], results: number[]) {
     set.forEach((b, i) => {
       this.train(b, results[i]);
     });
-
-    let i = 0;
-    while (i++ < cycles && !this.retrain()) {}
   }
 
-  test(setTest: number[][], resultsTest: number[]) {
+  /**
+   * Testa o algoritmo prediction
+   * @param setTest Valores de teste
+   * @param resultsTest Resultado dos testes
+   * @returns
+   */
+  testSet(setTest: number[][], resultsTest: number[]) {
     let err = 0;
     let hits = 0;
 
     setTest.forEach((v, i) => {
       const result = this.predict(v);
-
-      console.log(`Resultado: ${result} - Esperado: ${resultsTest[i]}`);
 
       if (result === resultsTest[i]) {
         hits++;
@@ -101,7 +54,52 @@ class Perceptron {
       }
     });
 
-    return { err, hits, weights: this.weights };
+    return {
+      err,
+      hits,
+      weights: this.weights.slice(0, -1),
+      bias: this.weights.slice(-1)[0],
+    };
+  }
+
+  /**
+   * Treina o perceptron a partir de um novo dado
+   * @param inputs
+   * @param expected
+   * @returns
+   */
+  private train(inputs: number[], expected: number): boolean {
+    const result = this.predict(inputs);
+    this.data.push({ input: inputs, target: expected, prev: result });
+
+    if (result == expected) return true;
+
+    this.weights = this.weights.map((weight, i) => {
+      const isLast = i == inputs.length;
+      const input = isLast ? this.threshold : inputs[i];
+      return this.calcWeight(result, expected, input, this.learnTaxe, weight);
+    });
+
+    return false;
+  }
+
+  /**
+   * Aplica a formula de calculo de peso - wi + nx(d-y)
+   * @param actual
+   * @param expected
+   * @param input
+   * @param learnrate
+   * @param index
+   * @returns
+   */
+  private calcWeight(
+    actual: number,
+    expected: number,
+    input: number,
+    learnrate: number,
+    weight: number
+  ) {
+    return (expected - actual) * learnrate * input + weight;
   }
 }
 

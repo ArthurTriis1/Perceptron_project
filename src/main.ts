@@ -11,14 +11,11 @@ import { readCsv } from "./utils/readCsv";
   const testeValues = teste.map((v) => [Number(v[0]), Number(v[1])]);
   const testeResult = teste.map((v) => Number(v[2]));
 
-  // console.log(baseValues);
-  // console.log(base);
-
   var perceptron = new Perceptron();
 
-  perceptron.trainSet(baseValues, baseResult, 1);
+  perceptron.trainSet(baseValues, baseResult);
 
-  const result = perceptron.test(testeValues, testeResult);
+  const result = perceptron.testSet(testeValues, testeResult);
 
   console.log(result);
 })();
